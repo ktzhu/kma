@@ -11,7 +11,7 @@
 ###############################################################################
 
 # handin info
-TEAM = `whoami`
+TEAM = agm564+jyh286+kaz600
 VERSION = `date +%Y%m%d%H%M%S`
 PROJ = kma
 
