@@ -1,0 +1,171 @@
+We implemented both the required algorithms as well as all three of the extra credit algorithms.
+
+Authors:
+Aedan Maher (agm564)
+Jeanette Huang (jyh286)
+Katie Zhu (kaz600)
+
+Required Algorithms:
+
+Power-of-two Free List - KMA_P2FL:
+
+Trace 1:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 2:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 3:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 4:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 5:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Buddy System - KMA_BUD:
+
+Trace 1:
+Page Requested/Freed/In Use: 3/3/0
+real 0.02
+user 0.00
+sys 0.00
+
+Trace 2:
+Page Requested/Freed/In Use: 43/43/0
+real 0.02
+user 0.00
+sys 0.00
+
+Trace 3:
+Page Requested/Freed/In Use: 1374/1374/0
+real 0.16
+user 0.04
+sys 0.01
+
+Trace 4:
+Page Requested/Freed/In Use: 1244/1244/0
+real 0.15
+user 0.07
+sys 0.01
+
+Trace 5:
+Page Requested/Freed/In Use: 10054/10054/0
+real 0.81
+user 0.37
+sys 0.02
+
+
+Extra Credit Algorithms:
+
+SVR4 Lazy Buddy - KMA_LZBUD:
+
+Trace 1:
+Page Requested/Freed/In Use: 3/3/0
+real 0.02
+user 0.00
+sys 0.01
+
+Trace 2:
+Page Requested/Freed/In Use: 43/43/0
+real 0.04
+user 0.00
+sys 0.00
+
+Trace 3:
+Page Requested/Freed/In Use: 775/775/0
+real 0.11
+user 0.04
+sys 0.01
+
+Trace 4:
+Page Requested/Freed/In Use: 1244/1244/0
+real 0.15
+user 0.09
+sys 0.01
+
+Trace 5:
+Page Requested/Freed/In Use: 1021/1021/0
+real 0.83
+user 0.35
+sys 0.02
+
+McKusick- Karels - KMA_MCK2:
+
+Trace 1:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 2:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 3:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 4:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 5:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Resource Map - KMA_RM:
+
+Trace 1:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 2:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 3:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 4:
+Page Requested/Freed/In Use:
+real
+user
+sys
+
+Trace 5:
+Page Requested/Freed/In Use:
+real
+user
+sys
