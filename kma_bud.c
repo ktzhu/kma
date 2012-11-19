@@ -94,6 +94,7 @@ split(listheader_struct* list, kma_size_t size);
 
 /**************Implementation***********************************************/
 
+/* kma_malloc */
 void* kma_malloc(kma_size_t size) {
   // Round size up
   kma_size_t s=16;
@@ -284,8 +285,9 @@ void* kma_malloc(kma_size_t size) {
   }
 
   return NULL;
-}
+} /* kma_malloc */
 
+/* free_list_size */
 // Check the size of the free list
 int free_list_size (kma_size_t size) {
   kma_size_t ret=16;
@@ -300,8 +302,9 @@ int free_list_size (kma_size_t size) {
     }
   }
   return 0;
-}
+} /* free_list_size */
 
+/* kma_free */
 void kma_free(void* ptr, kma_size_t size) {
   // Round up
   kma_size_t s=16;
@@ -378,10 +381,9 @@ void kma_free(void* ptr, kma_size_t size) {
     (*prev).page_next = (*temp).page_next;
     free_page((*temp).head);
   }
+} /* kma_free */
 
-
-}
-
+/* coalesce */
 // Free and combine buddy
 listheader_struct* coalesce (listheader_struct* list, pageheader_struct* page) {
 
@@ -468,8 +470,9 @@ listheader_struct* coalesce (listheader_struct* list, pageheader_struct* page) {
   }
 
   return ret;
-}
+} /* coalesce */
 
+/* split */
 // Split free list block
 listheader_struct* split (listheader_struct* list, kma_size_t size) {
 
@@ -500,6 +503,6 @@ listheader_struct* split (listheader_struct* list, kma_size_t size) {
     ret_list = split(ret_list, size);
   }
   return ret_list;
-}
+} /* split */
 
 #endif // KMA_BUD
