@@ -80,7 +80,7 @@ typedef struct {
 
 /************Global Variables*********************************************/
 
-mainheader_struct* g_pagemain=0;
+mainheader_struct* g_pagemain = 0;
 
 /************Function Prototypes******************************************/
 int
@@ -96,61 +96,65 @@ split(listheader_struct* list, kma_size_t size);
 
 /* kma_malloc */
 void* kma_malloc(kma_size_t size) {
-  // Round size up
+  /* Round up size */
   kma_size_t s=16;
   while(size > s){
     s = s<<1;
   }
   int size_rounded = s, i;
+  /* Round up size */
 
   void* ret;
 
-  if ((size + sizeof(void*)) > PAGESIZE) {
-    // The size of our request is too big
-    return NULL;
-  }
-  // Initialize
   if (!g_pagemain) {
+    /* Initialize header */
     kpage_t* page = get_page();
-    mainheader_struct* ret_page = (mainheader_struct*)(page->ptr);
-    (*ret_page).head = page;
-    (*ret_page).page_next=0;
-    (*ret_page).pagesnum=0;
-    (*ret_page).allocnum=0;
+    mainheader_struct* ret_header= (mainheader_struct*)(page->ptr);
+    (*ret_header).head = page;
+    (*ret_header).page_next=0;
+    (*ret_header).pagesnum=0;
+    (*ret_header).allocnum=0;
     for (i = 0; i < 91; i++) {
-      (*ret_page).page[i].page_ptr=0;
-      (*ret_page).page[i].addr=0;
+      (*ret_header).page[i].page_ptr=0;
+      (*ret_header).page[i].addr=0;
     }
     for (i = 0; i < 10; i++) {
-      (*ret_page).free_list[i].buffer = 0;
-      (*ret_page).free_list[i].size=16<<i;
+      (*ret_header).free_list[i].buffer = 0;
+      (*ret_header).free_list[i].size=16<<i;
     }
-    g_pagemain = ret_page;
+    g_pagemain = ret_header;
+    /* Intialize header */
+  }
+
+  /* Requested size too large */
+  if ((size + sizeof(void*)) > PAGESIZE) {
+    return NULL;
   }
 
   if (!(i=free_list_size(size))) {
     listheader_struct* list;
+    /* Check to see if there is a free page */
     pageheader_struct* page;
     pageheader_struct* ret_page = 0;
     mainheader_struct* temp = g_pagemain;
 
+    // find the available page header
     while (!ret_page) {
-      // Want to find page header, 91 = number of pages
       for(i = 0; i < 91; i++) {
         if ((*temp).page[i].page_ptr==0) {
           ret_page=&((*temp).page[i]);
           break;
         }
       }
-      // Break if the page is found
-      if (((*temp).page_next==0) || ret_page) {
+      // If we find the page or there is no next page, break
+      if (ret_page || ((*temp).page_next==0)) {
         break;
       }
-
       temp = (*temp).page_next;
     }
-    
+
     if (ret_page == 0) {
+      /* Initialize temp page */
       kpage_t* n_page = get_page();
       mainheader_struct* temp_ret = (mainheader_struct*)(n_page->ptr);
       (*temp_ret).head = n_page;
@@ -166,53 +170,44 @@ void* kma_malloc(kma_size_t size) {
         (*temp_ret).free_list[i].size=16<<i;
       }
       (*temp).page_next = temp_ret;
-
+      /* Initialize temp page */
       temp=(*temp).page_next;
       ret_page=&((*temp).page[0]);
+      /* initialize page */
       kpage_t* page = get_page();
-
       (*ret_page).allocnum=0;
       (*ret_page).page_ptr = page;
       (*ret_page).addr = (void*)(page->ptr);
-
-      int j;
-      for(j = 0; j < 64; j++) {
-        (*ret_page).bm[j]=0;
+      for(i = 0; i < 64; i++) {
+        (*ret_page).bm[i]=0;
       }
-
       *((buffer_struct**)((*ret_page).addr)) = 0;
-
       listheader_struct* list = &((*g_pagemain).free_list[9]);
       buffer_struct* buff = (buffer_struct*)((*ret_page).addr);
-
       buffer_struct* temp_buff = (*list).buffer;
       (*list).buffer = buff;
       (*buff).next_buff = temp_buff;
-
+      /* initialize page */
       (*g_pagemain).pagesnum++;
       (*temp).pagesnum++;
     }
     else {
+      /* Intialize temp page */
       kpage_t* page = get_page();
 
       (*ret_page).allocnum=0;
       (*ret_page).page_ptr = page;
       (*ret_page).addr = (void*)(page->ptr);
-
-      int j;
-      for(j = 0; j < 64; j++) {
-        (*ret_page).bm[j]=0;
+      for(i = 0; i < 64; i++) {
+        (*ret_page).bm[i]=0;
       }
-
       *((buffer_struct**)((*ret_page).addr)) = 0;
-
       listheader_struct* list = &((*g_pagemain).free_list[9]);
       buffer_struct* buff = (buffer_struct*)((*ret_page).addr);
-
       buffer_struct* temp_buff = (*list).buffer;
       (*list).buffer = buff;
       (*buff).next_buff = temp_buff;
-
+      /* initialize page */
       (*g_pagemain).pagesnum++;
       (*temp).pagesnum++;
     }
@@ -222,9 +217,11 @@ void* kma_malloc(kma_size_t size) {
     int i, end;
 
     list = split(&((*g_pagemain).free_list[9]), size_rounded);
+    /* unlink the buffer */
     buffer_struct* ret_buff = (*list).buffer;
     (*list).buffer=(*ret_buff).next_buff;
     ret = (buffer_struct*)ret_buff;
+    /* unlink the buffer */
 
     // Round up
     int os = (int)(ret - (*page).addr);
@@ -239,7 +236,7 @@ void* kma_malloc(kma_size_t size) {
     (*g_pagemain).allocnum++;
     return (void*)ret;
   }
-  // We have the new page that we want
+  // Create a new page if there aren't enough pages available
   else {
     pageheader_struct* page=0;
     listheader_struct* list;
@@ -249,13 +246,15 @@ void* kma_malloc(kma_size_t size) {
     i--;
 
     list = split(&((*g_pagemain).free_list[i]), size_rounded);
+    /* Unlink the buffer */
     buffer_struct* ret_buff = (*list).buffer;
     (*list).buffer=(*ret_buff).next_buff;
     ret = (buffer_struct*)ret_buff;
+    /* Unlink the buffer */
 
     void* address = (void*)(((long int)(((long int)ret - (long int)g_pagemain)/PAGESIZE)) * PAGESIZE + (long int)g_pagemain);
 
-    // Unlink the first buffer in the free list 
+    // Get the page header
     while(!page){
       for(i = 0; i < 91; i++) {
         if((*temp).page[i].addr == address){
@@ -263,13 +262,14 @@ void* kma_malloc(kma_size_t size) {
           break;
         }
       }
+      // If we find the page, break
       if (page || ((*temp).page_next == 0)) {
         break;
       }
       temp = (*temp).page_next;
     }
 
-    // Fill bitmap
+    /* Fill the bitmap */
     bm = (*page).bm;
     int j, os = (int)(ret - (*page).addr);
     end = (size_rounded + os)/16;
@@ -278,6 +278,7 @@ void* kma_malloc(kma_size_t size) {
     for (j = os; j < end; j++) {
       bm[j/8] |= (1<<(j%8));
     }
+    /* Fill the bitmap */
 
     (*page).allocnum++;
     (*g_pagemain).allocnum++;
@@ -290,10 +291,13 @@ void* kma_malloc(kma_size_t size) {
 /* free_list_size */
 // Check the size of the free list
 int free_list_size (kma_size_t size) {
+  /* Round up size */
   kma_size_t ret=16;
   while(size > ret){
     ret = ret<<1;
   }
+  /* Round up size */
+  // Initialize variables
   int size_rounded = ret, i;
 
   for(i = 0; i < 10; i++) {
@@ -306,12 +310,13 @@ int free_list_size (kma_size_t size) {
 
 /* kma_free */
 void kma_free(void* ptr, kma_size_t size) {
-  // Round up
+  /* Round up size */
   kma_size_t s=16;
   while(size > s){
     s = s<<1;
   }
-  // init vars
+  /* Round up size */
+  // Initialize variables
   int size_rounded = s, i, end;
   listheader_struct* list=0;
   pageheader_struct* page=0;
@@ -319,36 +324,34 @@ void kma_free(void* ptr, kma_size_t size) {
   mainheader_struct* temp=g_pagemain;
   void* address = (void*)(((long int)(((long int)ptr - (long int)g_pagemain)/PAGESIZE)) * PAGESIZE + (long int)g_pagemain);
 
-  while(!page){
-    // get the page header, 91 = num of pages
+  // Get the page and get the page header
+  while (!page) {
     for(i = 0; i < 91; i++) {
       if ((*temp).page[i].addr == address) {
         page = &((*temp).page[i]);
         break;
       }
     }
+    // If we find the page or there is no next page, break
     if (((*temp).page_next == 0) || page) {
       break;
     }
-
     prev = temp;
     temp = (*temp).page_next;
   }
-
   for (i = 0; i < 10; ++i) {
-    // get the header
     if ((*g_pagemain).free_list[i].size == size_rounded) {
       break;
     }
   }
-
   list = &((*g_pagemain).free_list[i]);
-  // Insert buffer
+  /* Insert buffer */
   buffer_struct* buff = ptr;
   buffer_struct* temp_buffer = (*list).buffer;
   (*list).buffer = buff;
   (*buff).next_buff = temp_buffer;
-  // Empty bitmap
+  /* Insert buffer */
+  /* Empty bitmap */
   unsigned char* bm = (*page).bm;
   int j, os = (int)(ptr - (*page).addr);
   end = (size_rounded + os)/16;
@@ -357,7 +360,7 @@ void kma_free(void* ptr, kma_size_t size) {
   for(j = os; j < end; j++) {
     bm[j/8] &= (~(1<<(j%8)));
   }
-
+  /* end empty bitmap */
   (*page).allocnum--;
   (*g_pagemain).allocnum--;
 
@@ -386,7 +389,7 @@ void kma_free(void* ptr, kma_size_t size) {
 /* coalesce */
 // Free and combine buddy
 listheader_struct* coalesce (listheader_struct* list, pageheader_struct* page) {
-
+  /* Init variables */
   listheader_struct* ret = (listheader_struct*)((long int)list + sizeof(listheader_struct));
   unsigned char* bm = (*page).bm;
   kma_size_t size = (*list).size;
@@ -399,7 +402,7 @@ listheader_struct* coalesce (listheader_struct* list, pageheader_struct* page) {
     return list;
   }
 
-  if (!(os%(2*size) == 0)) {
+  if (!(os%(2*size) == 0)) { // Buddy was previous
     second_temp = (buffer_struct*)((void*)((*list).buffer) - size);
     third_temp = (*list).buffer;
 
@@ -429,8 +432,7 @@ listheader_struct* coalesce (listheader_struct* list, pageheader_struct* page) {
     third_temp = (buffer_struct*)ret_buff;
   }
 
-  else {
-    // buddy is next
+  else { // Buddy is next
     second_temp =(*list).buffer;
     third_temp = (buffer_struct*)(size + (void*)((*list).buffer));
     os += size;
@@ -475,7 +477,7 @@ listheader_struct* coalesce (listheader_struct* list, pageheader_struct* page) {
 /* split */
 // Split free list block
 listheader_struct* split (listheader_struct* list, kma_size_t size) {
-
+  /* Init variables */
   listheader_struct* ret_list = (listheader_struct*)((long int)list - sizeof(listheader_struct));
   buffer_struct* first_temp;
   buffer_struct* second_temp;
@@ -490,11 +492,11 @@ listheader_struct* split (listheader_struct* list, kma_size_t size) {
   first_temp = (buffer_struct*)ret_buff;
   second_temp = first_temp;
   third_temp = (buffer_struct*)((long int)second_temp + (*ret_list).size);
-
+  /* Unlink the buffer */
   buffer_struct* tempbuff = (*ret_list).buffer;
   (*ret_list).buffer = third_temp;
   (*third_temp).next_buff = tempbuff;
-
+  /* Unlink the buffer */
   buffer_struct* tempbuff1 = (*ret_list).buffer;
   (*ret_list).buffer = second_temp;
   (*second_temp).next_buff = tempbuff1;
