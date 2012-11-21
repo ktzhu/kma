@@ -83,8 +83,6 @@ typedef struct {
 mainheader_struct* g_pagemain = 0;
 
 /************Function Prototypes******************************************/
-int
-free_list_size(kma_size_t size);
 listheader_struct*
 coalesce(listheader_struct* list, pageheader_struct* page);
 listheader_struct*
@@ -131,7 +129,16 @@ void* kma_malloc(kma_size_t size) {
     return NULL;
   }
 
-  if (!(i=free_list_size(size))) {
+  /* get size of the free list */
+  int j, res = 0;
+  for (j = 0; j < 10; j++) {
+    if ((size_rounded <= (*g_pagemain).free_list[j].size) && (*g_pagemain).free_list[j].buffer != 0) {
+      res = j + 1;
+      break;
+    }
+  }
+
+  if (!(i = res)) {
     listheader_struct* list;
     /* Check to see if there is a free page */
     pageheader_struct* page;
@@ -287,26 +294,6 @@ void* kma_malloc(kma_size_t size) {
 
   return NULL;
 } /* kma_malloc */
-
-/* free_list_size */
-// Check the size of the free list
-int free_list_size (kma_size_t size) {
-  /* Round up size */
-  kma_size_t ret=16;
-  while(size > ret){
-    ret = ret<<1;
-  }
-  /* Round up size */
-  // Initialize variables
-  int size_rounded = ret, i;
-
-  for(i = 0; i < 10; i++) {
-    if((size_rounded <= (*g_pagemain).free_list[i].size) && (*g_pagemain).free_list[i].buffer!=0) {
-      return i+1;
-    }
-  }
-  return 0;
-} /* free_list_size */
 
 /* kma_free */
 void kma_free(void* ptr, kma_size_t size) {

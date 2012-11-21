@@ -87,16 +87,14 @@ typedef struct {
 mainheader_struct* g_pagemain=0;
 
 /************Function Prototypes******************************************/
-int
-free_list_size(kma_size_t size);
 listheader_struct*
 coalesce(void* ptr, listheader_struct* list, pageheader_struct* page);
 void
 free_buff(mainheader_struct* temp, mainheader_struct* prev, void* address, listheader_struct* list);
 buffer_struct*
-buff_unlink(listheader_struct* thefreelist, buffer_struct* thebufaddr);
+buff_unlink(listheader_struct* list, buffer_struct* addr);
 void
-buff_insert(listheader_struct* list, buffer_struct* buff);
+add_buff (buffer_struct* buff, listheader_struct* list);
 listheader_struct*
 split(pageheader_struct* page, listheader_struct* list, kma_size_t size);
 
@@ -143,7 +141,16 @@ kma_malloc(kma_size_t size) {
     return NULL;
   }
 
-  if (!(i=free_list_size(size))) {
+  // Get size of the free list
+  int j, res = 0;
+  for (j = 0; j < 10; j++) {
+    if ((size_rounded <= (*g_pagemain).free_list[j].size) && (*g_pagemain).free_list[j].buffer != 0) {
+      res = j+1;
+      break;
+    }
+  }
+
+  if (!(i = res)) {
     pageheader_struct* page;
     /* Check to see if there is a free page */
     pageheader_struct* page_ret=0;
@@ -177,7 +184,9 @@ kma_malloc(kma_size_t size) {
       temp_buff = (*page_ret).addr;
       (*temp_buff).size = 8192;
       (*temp_buff).islocal = 0;
-      buff_insert(&((*g_pagemain).free_list[9]), temp_buff);
+      /* tmp var for adding buff */
+      listheader_struct* tmp_list = &((*g_pagemain).free_list[9]);
+      add_buff(temp_buff, tmp_list);
       /* initialize page */
       (*g_pagemain).pagesnum++;
       (*temp).pagesnum++;
@@ -216,7 +225,9 @@ kma_malloc(kma_size_t size) {
       temp_buff = (*page_ret).addr;
       (*temp_buff).size = 8192;
       (*temp_buff).islocal = 0;
-      buff_insert(&((*g_pagemain).free_list[9]), temp_buff);
+      /* tmp var for adding buff */
+      listheader_struct* tmp_list = &((*g_pagemain).free_list[9]);
+      add_buff(temp_buff, tmp_list);
       /* initialize page */
       (*g_pagemain).pagesnum++;
       (*temp).pagesnum++;
@@ -348,7 +359,7 @@ void kma_free(void* ptr, kma_size_t size) {
     }
   }
   list = &((*g_pagemain).free_list[i]);
-  buff_insert(list, ptr);
+  add_buff(ptr, list);
   (*((buffer_struct*)ptr)).size = size_rounded;
 
   if ((*list).s == 1) {
@@ -429,22 +440,6 @@ void kma_free(void* ptr, kma_size_t size) {
   }
 } /* kma_free */
 
-/* free_list_size */
-int free_list_size (kma_size_t size) {
-  kma_size_t ret=16;
-  while(size > ret){
-    ret = ret<<1;
-  }
-  int size_rounded = ret, i;
-
-  for(i = 0; i < 10; i++) {
-    if((size_rounded <= (*g_pagemain).free_list[i].size) && (*g_pagemain).free_list[i].buffer!=0) {
-      return i+1;
-    }
-  }
-  return 0;
-} /* free_list_size */
-
 /* coalesce */
 listheader_struct* coalesce (void* ptr, listheader_struct* list, pageheader_struct* page) {
   /* Init variables */
@@ -494,7 +489,7 @@ listheader_struct* coalesce (void* ptr, listheader_struct* list, pageheader_stru
   temp3 = buff_unlink(list,temp3);
   temp2 = buff_unlink(list,temp2);
   temp1 = temp2;
-  buff_insert(ret, temp1);
+  add_buff(temp1, ret);
 
   (*temp1).size=(*ret).size;
 
@@ -612,8 +607,8 @@ buffer_struct* buff_unlink (listheader_struct* list, buffer_struct* addr) {
   return 0;
 } /* buff_unlink */
 
-/* buff_insert */
-void buff_insert (listheader_struct* list, buffer_struct* buff) {
+/* add_buff */
+void add_buff (buffer_struct* buff, listheader_struct* list) {
   if ((*list).buffer > buff) {
     (*buff).next_buff = (*list).buffer;
     (*list).buffer = buff;
@@ -635,7 +630,7 @@ void buff_insert (listheader_struct* list, buffer_struct* buff) {
     (*(buffer_struct*)temp_next_buff).next_buff = buff;
     (*buff).next_buff = temp;
   }
-} /* buff_insert */
+} /* add_buff */
 
 /* split */
 listheader_struct* split (pageheader_struct* page, listheader_struct* list, kma_size_t size) {
@@ -667,8 +662,8 @@ listheader_struct* split (pageheader_struct* page, listheader_struct* list, kma_
     (*page).allocnum++;
   }
 
-  buff_insert(ret, temp3);
-  buff_insert(ret, temp2);
+  add_buff(temp3, ret);
+  add_buff(temp2, ret);
 
   if ((*ret).size > size) {
     ret = split(page, ret, size);
