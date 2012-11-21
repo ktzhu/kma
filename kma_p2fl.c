@@ -55,20 +55,20 @@
  */
 
 typedef struct {
-	void* next_buff;
+  void* next_buff;
 } buffer_struct;
 
 typedef struct {
   buffer_struct* buff;
-	int size;
+  int size;
 } freelist_struct;
 
 typedef struct {
-	void* head;
+  void* head;
   void* free_mem;
   int page_cnt;
   int alloc_cnt;
-	freelist_struct fl[10];
+  freelist_struct fl[10];
 } listheader_struct;
 
 /************Global Variables*********************************************/
