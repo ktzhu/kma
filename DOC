@@ -1,4 +1,4 @@
-We implemented both the required algorithms as well as the SVR4 Lazy Buddy and McKusick- Karels extra credit algorithms.
+We implemented both the required algorithms as well as the SVR4 Lazy Buddy and McKusick-Karels extra credit algorithms.
 
 Authors:
 Aedan Maher (agm)
@@ -61,6 +61,8 @@ real 0.81
 user 0.37
 sys 0.02
 
+Our implementation of the buddy system algorithm allocates buffers as a full page, and we have a global variable that we use to keep track how many pages are being used as well as how many allocs we have done. In addition, we implemented a list that keeps track of every block that is free, so whenever there is a request, we simply check that list. If there is a hit, we call `split` on our large buffer to get smaller ones (half the size of the large) until we find the correct size block. If there is a miss, create a new page and then split the buffer to find the appropriate-sized block. We implemented `coalesce` to combine buddy blocks.
+
 
 Extra Credit Algorithms:
 
@@ -90,6 +92,8 @@ Trace 5:
 real 0.83
 user 0.35
 sys 0.02
+
+The SVR4 lazy buddy algorithm is very similar to our implementation of the buddy system algorithm, though a significant change is that we now add free buffers to our free list in increasing address order of the buffer. In addition, we added a variable to our list struct that keeps track of the slack of every free list.
 
 
 McKusick- Karels - KMA_MCK2:
