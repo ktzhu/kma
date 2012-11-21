@@ -1,13 +1,15 @@
 We implemented both the required algorithms as well as the SVR4 Lazy Buddy and McKusick-Karels extra credit algorithms.
 
 Authors:
-Aedan Maher (agm)
+Aedan Maher (agm564)
 Jeanette Huang (jyh286)
 Katie Zhu (kaz600)
 
 Required Algorithms:
 
 Power-of-two Free List - KMA_P2FL:
+
+We implemented P2FL using free lists of sizes in powers of two. Each free list points to a buffer, which in turn has a struct member that points to the free list it's in. We also track a page's number of allocated blocks and a count of how many pages have been used. In our P2FL implementation our blocks are contiguous so when we free a buffer we naively add it to the head of our free list which impacts efficiency. Our allocation is as follows: when a request is made, the first plan of attack is to check our free list. We want to avoid requesting a new page if there's still free space in the buffer. If this fails, the next tactic is to look within the current page to see if there's enough available space in other buffer. If these both fail, then plan C is to finally ask for a new page.
 
 Trace 1:
 real 0.02
@@ -97,6 +99,8 @@ The SVR4 lazy buddy algorithm is very similar to our implementation of the buddy
 
 
 McKusick- Karels - KMA_MCK2:
+
+For our MCK implementation, we adapted P2FL's implementation but use a fixed size. We link all our buffers and for page initialization, we chunk up a page equally into this fixed size. Because we've implemented MCK using P2FL's sequential allocation, to free a middle block we mark it empty (make the first buffer in the page point to what the last buffer is pointing to and remove first buffer from the linked list).
 
 Trace 1:
 real 0.03
