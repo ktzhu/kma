@@ -165,7 +165,6 @@ kma_malloc(kma_size_t size) {
 
   // Try the free list first
   void* fl_ptr;
-  // fl_ptr = (void *)(((*g_pg).page_cnt + 1) * PAGESIZE + (long int)g_pg);
   fl_ptr = (void *)((long int)g_pg + ((*g_pg).page_cnt + 1) * PAGESIZE);
   int j = 0;
   while((16 << j) != size_rounded) { j++; }
@@ -181,6 +180,7 @@ kma_malloc(kma_size_t size) {
 
   int i;
   if((i = j)) {
+    // Free list
     pageheader_struct* pg;
 
     // Unlink the buffer from lst
@@ -209,6 +209,7 @@ kma_malloc(kma_size_t size) {
     }
 
     if((i = is_empty_pg)){
+      // Empty page
       pageheader_struct* curr_pg;
       curr_pg=(pageheader_struct*)((long int)g_pg + i * PAGESIZE);
 
@@ -279,6 +280,7 @@ kma_malloc(kma_size_t size) {
       return result;
     }
     else {
+      // New page!
       // Initialize the page
       kpage_t* init_pg = get_page();
       int i;
@@ -351,7 +353,7 @@ kma_malloc(kma_size_t size) {
 
 void
 kma_free(void* ptr, kma_size_t size) {
-  // Round up the size, store in size_rounded
+  // Round up size, store in size_rounded
   kma_size_t fl_s = 16;
   while(size > fl_s) { fl_s = fl_s << 1; }
   int size_rounded = fl_s;
@@ -373,14 +375,14 @@ kma_free(void* ptr, kma_size_t size) {
     buffer_struct* tmp_fl;
     listheader_struct* tmp_addr;
 
-    if(size_rounded == G_MAXSIZE) {
-      tmp_fl = (buffer_struct*)((long int)pg + sizeof(pageheader_struct));
-      tmp_addr = &((*g_pg).fl[9]);
-      clear_buff(tmp_fl, tmp_addr);
-    }
-    else if(size_rounded == G_MAXSIZE / 2){
+    if(size_rounded == G_MAXSIZE / 2) {
       tmp_fl = (buffer_struct*)((long int)pg + sizeof(pageheader_struct));
       tmp_addr = &((*g_pg).fl[8]);
+      clear_buff(tmp_fl, tmp_addr);
+    }
+    else if(size_rounded == G_MAXSIZE){
+      tmp_fl = (buffer_struct*)((long int)pg + sizeof(pageheader_struct));
+      tmp_addr = &((*g_pg).fl[9]);
       clear_buff(tmp_fl, tmp_addr);
     }
     else {
@@ -419,14 +421,16 @@ buffer_struct* clear_buff(buffer_struct* addr, listheader_struct* fl){
   buff_tmp=(*fl).buff;
   buffer_struct* result = 0;
 
-  if(addr==buff_tmp) {
+  if(addr == buff_tmp) {
     result = addr;
-    (*fl).buff=(*result).next_buff;
+    (*fl).buff = (*result).next_buff;
     return result;
   }
 
   while(buff_tmp) {
+    // Look for buffer
     if((*(buffer_struct*)buff_tmp).next_buff == addr) {
+      // Store it
       result = addr;
       (*(buffer_struct*)buff_tmp).next_buff = (*result).next_buff;
       return result;
@@ -439,11 +443,13 @@ buffer_struct* clear_buff(buffer_struct* addr, listheader_struct* fl){
 /* add_buff */
 void add_buff (buffer_struct* buff, listheader_struct* fl) {
   if ((*fl).buff == 0) {
+    // Case: head
     (*fl).buff = buff;
     (*buff).next_buff = 0;
   }
 
   else if (buff < (*fl).buff) {
+    // We're no longer at head
     (*buff).next_buff = (*fl).buff;
     (*fl).buff = buff;
   }
