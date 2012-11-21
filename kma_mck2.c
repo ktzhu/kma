@@ -86,18 +86,15 @@ void add_buff(buffer_struct* buff, listheader_struct* fl);
 /**************Implementation***********************************************/
 
 void*
-kma_malloc(kma_size_t size)
-{
+kma_malloc(kma_size_t size) {
   // tmp vars to add buffers l8r
   buffer_struct* tmp_buff;
   listheader_struct* tmp_fl;
 
-	if ((sizeof(void*) + size) > PAGESIZE){ // requested size too large
-		return NULL;
-	}
+  if ((sizeof(void*) + size) > PAGESIZE) { return NULL; }
 
-	if(!g_pg) {
-	  // Initialize the page
+  if(!g_pg) {
+    // Initialize the page
     kpage_t* init_pg = get_page();
     int i;
     int j = 0;
@@ -105,7 +102,7 @@ kma_malloc(kma_size_t size)
     pageheader_struct* pg_result = (pageheader_struct*)((*init_pg).ptr);
     buffer_struct* buff_tmp;
     buffer_struct* buff_head;
-		buffer_struct* buff_tail;
+    buffer_struct* buff_tail;
     *((kpage_t**)init_pg->ptr) = init_pg;
 
     if (g_pg == 0) { g_pg = pg_result; }
@@ -130,41 +127,41 @@ kma_malloc(kma_size_t size)
     }
 
     else {
-  		buff_head = (buffer_struct*)((long int)pg_result + sizeof(pageheader_struct));
-  		buff_tail = (buffer_struct*)((long int)pg_result + PAGESIZE - used_pg);
-  		for(buff_tmp = buff_head; buff_tmp < buff_tail; buff_tmp = (buffer_struct*)((long int)buff_tmp + used_pg)) {
-  			(*buff_tmp).next_buff = (void*)((long int)buff_tmp + used_pg);
-  		}
-  		buff_tmp = (buffer_struct*)((long int)buff_tmp - used_pg);
-  		(*buff_tmp).next_buff = 0;
+      buff_head = (buffer_struct*)((long int)pg_result + sizeof(pageheader_struct));
+      buff_tail = (buffer_struct*)((long int)pg_result + PAGESIZE - used_pg);
+      for(buff_tmp = buff_head; buff_tmp < buff_tail; buff_tmp = (buffer_struct*)((long int)buff_tmp + used_pg)) {
+  	(*buff_tmp).next_buff = (void*)((long int)buff_tmp + used_pg);
+      }
+      buff_tmp = (buffer_struct*)((long int)buff_tmp - used_pg);
+      (*buff_tmp).next_buff = 0;
 
-  		while((16 << j) != used_pg) { j++; }
+      while((16 << j) != used_pg) { j++; }
       tmp_fl = &((*g_pg).fl[j]);
 
-  		// Add the last buffer
-  		add_buff(buff_tmp, tmp_fl);
+      // Add the last buffer
+      add_buff(buff_tmp, tmp_fl);
 
-  		// Add the first buffer
-  		add_buff(buff_head, tmp_fl);
+      // Add the first buffer
+      add_buff(buff_head, tmp_fl);
 
-  		// Link all the buffers
-  		(*buff_head).next_buff = (void*)((long int)buff_head + used_pg);
+      // Link all the buffers
+      (*buff_head).next_buff = (void*)((long int)buff_head + used_pg);
     }
 
-		g_pg = pg_result;
-	}
+    g_pg = pg_result;
+  }
 
   // Round up the size, store in size_rounded
   kma_size_t fl_s = 16;
   while(size > fl_s) { fl_s = fl_s << 1; }
   int size_rounded = fl_s;
 
-	int indx=0;
-	while((16 << indx)!=size_rounded) { indx++; }
-	listheader_struct* lst;
-	lst=&((*g_pg).fl[indx]);
+  int indx=0;
+  while((16 << indx)!=size_rounded) { indx++; }
+  listheader_struct* lst;
+  lst=&((*g_pg).fl[indx]);
 
-	buffer_struct* result;
+  buffer_struct* result;
 
   // Try the free list first
   void* fl_ptr;
@@ -183,8 +180,8 @@ kma_malloc(kma_size_t size)
   }
 
   int i;
-	if((i = j)) {
-		pageheader_struct* pg;
+  if((i = j)) {
+    pageheader_struct* pg;
 
     // Unlink the buffer from lst
     buffer_struct* new_buff;
@@ -192,14 +189,14 @@ kma_malloc(kma_size_t size)
     (*lst).buff = (*new_buff).next_buff;
     result = new_buff;
 
-		pg=(pageheader_struct*)(((long int)(((long int)result-(long int)g_pg)/PAGESIZE))*PAGESIZE + (long int)g_pg);
-		(*g_pg).alloc_cnt++;
-		(*pg).alloc_cnt++;
-		return result;
-	}
+    pg=(pageheader_struct*)(((long int)(((long int)result-(long int)g_pg)/PAGESIZE))*PAGESIZE + (long int)g_pg);
+    (*g_pg).alloc_cnt++;
+    (*pg).alloc_cnt++;
+    return result;
+  }
 
-	else {
-  	// Try an empty page
+  else {
+    // Try an empty page
     int acc;
     int is_empty_pg = 0;
     pageheader_struct* tmp_pg;
@@ -211,18 +208,18 @@ kma_malloc(kma_size_t size)
       }
     }
 
-  	if((i = is_empty_pg)){
-  		pageheader_struct* curr_pg;
-  		curr_pg=(pageheader_struct*)((long int)g_pg + i * PAGESIZE);
+    if((i = is_empty_pg)){
+      pageheader_struct* curr_pg;
+      curr_pg=(pageheader_struct*)((long int)g_pg + i * PAGESIZE);
 
-  		// Initialize the page
+      // Initialize the page
       kpage_t* init_pg = (*curr_pg).head;
       int i;
       int j = 0;
       pageheader_struct* pg_result = (pageheader_struct*)((*init_pg).ptr);
       buffer_struct* buff_tmp;
       buffer_struct* buff_head;
-  		buffer_struct* buff_tail;
+      buffer_struct* buff_tail;
       *((kpage_t**)init_pg->ptr) = init_pg;
 
       if (g_pg == 0) { g_pg = pg_result; }
@@ -246,50 +243,50 @@ kma_malloc(kma_size_t size)
       }
 
       else {
-    		buff_head = (buffer_struct*)((long int)pg_result + sizeof(pageheader_struct));
-    		buff_tail = (buffer_struct*)((long int)pg_result + PAGESIZE - size_rounded);
-    		for(buff_tmp = buff_head; buff_tmp < buff_tail; buff_tmp = (buffer_struct*)((long int)buff_tmp + size_rounded)) {
-    			(*buff_tmp).next_buff = (void*)((long int)buff_tmp + size_rounded);
-    		}
-    		buff_tmp = (buffer_struct*)((long int)buff_tmp - size_rounded);
-    		(*buff_tmp).next_buff = 0;
+    	buff_head = (buffer_struct*)((long int)pg_result + sizeof(pageheader_struct));
+    	buff_tail = (buffer_struct*)((long int)pg_result + PAGESIZE - size_rounded);
+    	for(buff_tmp = buff_head; buff_tmp < buff_tail; buff_tmp = (buffer_struct*)((long int)buff_tmp + size_rounded)) {
+    	  (*buff_tmp).next_buff = (void*)((long int)buff_tmp + size_rounded);
+    	}
+    	buff_tmp = (buffer_struct*)((long int)buff_tmp - size_rounded);
+    	(*buff_tmp).next_buff = 0;
 
-    		while((16 << j) != size_rounded) { j++; }
+    	while((16 << j) != size_rounded) { j++; }
 
         tmp_fl = &((*g_pg).fl[j]);
 
-    		// Add the last buffer
-    		add_buff(buff_tmp, tmp_fl);
+    	// Add the last buffer
+    	add_buff(buff_tmp, tmp_fl);
 
-    		// Add the first buffer
-    		add_buff(buff_head, tmp_fl);
+    	// Add the first buffer
+    	add_buff(buff_head, tmp_fl);
 
-    		// Link all the buffers
-    		(*buff_head).next_buff = (void*)((long int)buff_head + size_rounded);
+    	// Link all the buffers
+    	(*buff_head).next_buff = (void*)((long int)buff_head + size_rounded);
       }
 
-  		curr_pg = pg_result;
+      curr_pg = pg_result;
 
-  		// Unlink the buffer from lst
-  		buffer_struct* new_buff;
+      // Unlink the buffer from lst
+      buffer_struct* new_buff;
       new_buff = (*lst).buff;
       (*lst).buff = (*new_buff).next_buff;
       result = new_buff;
 
       (*curr_pg).alloc_cnt++;
-  		(*g_pg).alloc_cnt++;
+      (*g_pg).alloc_cnt++;
 
-  		return result;
-  	}
-  	else {
-    	// Initialize the page
+      return result;
+    }
+    else {
+      // Initialize the page
       kpage_t* init_pg = get_page();
       int i;
       int j = 0;
       pageheader_struct* pg_result = (pageheader_struct*)((*init_pg).ptr);
       buffer_struct* buff_tmp;
       buffer_struct* buff_head;
-  		buffer_struct* buff_tail;
+      buffer_struct* buff_tail;
       *((kpage_t**)init_pg->ptr) = init_pg;
 
       if (g_pg == 0) { g_pg = pg_result; }
@@ -313,137 +310,130 @@ kma_malloc(kma_size_t size)
       }
 
       else {
-    		buff_head = (buffer_struct*)((long int)pg_result + sizeof(pageheader_struct));
-    		buff_tail = (buffer_struct*)((long int)pg_result + PAGESIZE - size_rounded);
-    		for(buff_tmp = buff_head; buff_tmp < buff_tail; buff_tmp = (buffer_struct*)((long int)buff_tmp + size_rounded)) {
-    			(*buff_tmp).next_buff = (void*)((long int)buff_tmp + size_rounded);
-    		}
-    		buff_tmp = (buffer_struct*)((long int)buff_tmp - size_rounded);
-    		(*buff_tmp).next_buff = 0;
+    	buff_head = (buffer_struct*)((long int)pg_result + sizeof(pageheader_struct));
+    	buff_tail = (buffer_struct*)((long int)pg_result + PAGESIZE - size_rounded);
+    	for(buff_tmp = buff_head; buff_tmp < buff_tail; buff_tmp = (buffer_struct*)((long int)buff_tmp + size_rounded)) {
+    	  (*buff_tmp).next_buff = (void*)((long int)buff_tmp + size_rounded);
+    	}
+    	buff_tmp = (buffer_struct*)((long int)buff_tmp - size_rounded);
+    	(*buff_tmp).next_buff = 0;
 
-    		while((16 << j) != size_rounded) { j++; }
+    	while((16 << j) != size_rounded) { j++; }
         tmp_fl = &((*g_pg).fl[j]);
 
-    		// Add the last buffer
-    		add_buff(buff_tmp, tmp_fl);
+    	// Add the last buffer
+    	add_buff(buff_tmp, tmp_fl);
 
-    		// Add the first buffer
-    		add_buff(buff_head, tmp_fl);
+    	// Add the first buffer
+    	add_buff(buff_head, tmp_fl);
 
-    		// Link all the buffers
-    		(*buff_head).next_buff = (void*)((long int)buff_head + size_rounded);
+    	// Link all the buffers
+    	(*buff_head).next_buff = (void*)((long int)buff_head + size_rounded);
       }
 
-  		pageheader_struct* new_pg = pg_result;
-  		(*g_pg).page_cnt++;
+      pageheader_struct* new_pg = pg_result;
+      (*g_pg).page_cnt++;
 
-  		// Unlink the buffer from lst
-  		buffer_struct* new_buff;
+      // Unlink the buffer from lst
+      buffer_struct* new_buff;
       new_buff = (*lst).buff;
       (*lst).buff = (*new_buff).next_buff;
       result = new_buff;
 
       (*new_pg).alloc_cnt++;
-  		(*g_pg).alloc_cnt++;
+      (*g_pg).alloc_cnt++;
 
-  		return result;
-  	}
+      return result;
+    }
   }
   return NULL;
 }
 
 void
-kma_free(void* ptr, kma_size_t size)
-{
+kma_free(void* ptr, kma_size_t size) {
   // Round up the size, store in size_rounded
   kma_size_t fl_s = 16;
   while(size > fl_s) { fl_s = fl_s << 1; }
   int size_rounded = fl_s;
 
-	int indx=0;
-	while((16<<indx) != size_rounded) {
-		indx++;
-	}
-	listheader_struct* lst;
-	pageheader_struct* pg;
-	lst=&((*g_pg).fl[indx]);
-	pg=(pageheader_struct*)(((long int)(((long int)ptr-(long int)g_pg)/PAGESIZE))*PAGESIZE + (long int)g_pg);
+  int indx=0;
+  while((16<<indx) != size_rounded) { indx++; }
+  pageheader_struct* pg;
+  listheader_struct* lst;
+  lst=&((*g_pg).fl[indx]);
+  pg=(pageheader_struct*)(((long int)(((long int)ptr-(long int)g_pg)/PAGESIZE))*PAGESIZE + (long int)g_pg);
 
-	add_buff((buffer_struct*)ptr, lst);
-	(*pg).alloc_cnt--;
-	(*g_pg).alloc_cnt--;
-	if((*pg).alloc_cnt == 0){
-		(*pg).empty = 1;
+  add_buff((buffer_struct*)ptr, lst);
+  (*pg).alloc_cnt--;
+  (*g_pg).alloc_cnt--;
+  if((*pg).alloc_cnt == 0){
+    (*pg).empty = 1;
 
-		// tmps for buffer clearing
+    // tmps for buffer clearing
     buffer_struct* tmp_fl;
     listheader_struct* tmp_addr;
 
-		if(size_rounded == G_MAXSIZE) {
+    if(size_rounded == G_MAXSIZE) {
       tmp_fl = (buffer_struct*)((long int)pg + sizeof(pageheader_struct));
       tmp_addr = &((*g_pg).fl[9]);
-			clear_buff(tmp_fl, tmp_addr);
-		}
-		else if(size_rounded == G_MAXSIZE / 2){
+      clear_buff(tmp_fl, tmp_addr);
+    }
+    else if(size_rounded == G_MAXSIZE / 2){
       tmp_fl = (buffer_struct*)((long int)pg + sizeof(pageheader_struct));
       tmp_addr = &((*g_pg).fl[8]);
-			clear_buff(tmp_fl, tmp_addr);
-		}
-		else {
-			buffer_struct* buff_head;
-			buffer_struct* buff_tail;
-			buffer_struct* buff_tmp;
-			buff_head = (buffer_struct*)((long int)pg + sizeof(pageheader_struct));
-			buff_tail = (buffer_struct*)((long int)pg + PAGESIZE - size_rounded);
-      for(buff_tmp = buff_head; buff_tmp < buff_tail; buff_tmp = (buffer_struct*)((long int)buff_tmp + size_rounded))
-			{
-				//(*tempbuf).nextbuffer = (void*)((long int)tempbuf + roundsize);
-			}
-			buff_tmp = (buffer_struct*)((long int)buff_tmp - size_rounded);
+      clear_buff(tmp_fl, tmp_addr);
+    }
+    else {
+      buffer_struct* buff_head;
+      buffer_struct* buff_tail;
+      buffer_struct* buff_tmp;
+      buff_head = (buffer_struct*)((long int)pg + sizeof(pageheader_struct));
+      buff_tail = (buffer_struct*)((long int)pg + PAGESIZE - size_rounded);
+      for(buff_tmp = buff_head; buff_tmp < buff_tail; buff_tmp = (buffer_struct*)((long int)buff_tmp + size_rounded)) { }
+      buff_tmp = (buffer_struct*)((long int)buff_tmp - size_rounded);
       tmp_addr = &((*g_pg).fl[indx]);
-			clear_buff(buff_tmp, tmp_addr);
-			(*buff_head).next_buff = (*buff_tmp).next_buff;
-			clear_buff(buff_head, tmp_addr);
-		}
-	}
+      clear_buff(buff_tmp, tmp_addr);
+      (*buff_head).next_buff = (*buff_tmp).next_buff;
+      clear_buff(buff_head, tmp_addr);
+    }
+  }
 
-	pageheader_struct* pg_end;
-	pg_end=(pageheader_struct*)((long int)g_pg + ((*g_pg).page_cnt) * PAGESIZE);
-	if(pg == pg_end)
-	{
-		while((*pg_end).alloc_cnt==0){
-			(*g_pg).page_cnt--;
-			free_page((*pg_end).head);
-			if(g_pg == pg_end){
-				g_pg = 0;
-				break;
-			}
-			pg_end = (pageheader_struct*)((long int)g_pg + ((*g_pg).page_cnt) * PAGESIZE);
-		}
-	}
+  pageheader_struct* pg_end;
+  pg_end=(pageheader_struct*)((long int)g_pg + ((*g_pg).page_cnt) * PAGESIZE);
+  if(pg == pg_end) {
+    while((*pg_end).alloc_cnt==0){
+      (*g_pg).page_cnt--;
+      free_page((*pg_end).head);
+      if(g_pg == pg_end) {
+	g_pg = 0;
+	break;
+      }
+      pg_end = (pageheader_struct*)((long int)g_pg + ((*g_pg).page_cnt) * PAGESIZE);
+    }
+  }
 }
 
 /* clear_buff */
 buffer_struct* clear_buff(buffer_struct* addr, listheader_struct* fl){
   void* buff_tmp;
   buff_tmp=(*fl).buff;
-	buffer_struct* result = 0;
+  buffer_struct* result = 0;
 
-	if(addr==buff_tmp) {
-		result = addr;
-		(*fl).buff=(*result).next_buff;
-		return result;
-	}
+  if(addr==buff_tmp) {
+    result = addr;
+    (*fl).buff=(*result).next_buff;
+    return result;
+  }
 
-	while(buff_tmp) {
-		if((*(buffer_struct*)buff_tmp).next_buff == addr) {
-			result = addr;
-			(*(buffer_struct*)buff_tmp).next_buff = (*result).next_buff;
-			return result;
-		}
-		buff_tmp = (*(buffer_struct*)buff_tmp).next_buff;
-	}
-	return 0;
+  while(buff_tmp) {
+    if((*(buffer_struct*)buff_tmp).next_buff == addr) {
+      result = addr;
+      (*(buffer_struct*)buff_tmp).next_buff = (*result).next_buff;
+      return result;
+    }
+    buff_tmp = (*(buffer_struct*)buff_tmp).next_buff;
+  }
+  return 0;
 } /* clear_buff */
 
 /* add_buff */

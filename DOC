@@ -1,7 +1,7 @@
-We implemented both the required algorithms as well as all three of the extra credit algorithms.
+We implemented both the required algorithms as well as the SVR4 Lazy Buddy and McKusick- Karels extra credit algorithms.
 
 Authors:
-Aedan Maher (agm564)
+Aedan Maher (agm)
 Jeanette Huang (jyh286)
 Katie Zhu (kaz600)
 
@@ -10,29 +10,29 @@ Required Algorithms:
 Power-of-two Free List - KMA_P2FL:
 
 Trace 1:
-real
-user
-sys
+real 0.02
+user 0.00
+sys 0.00
 
 Trace 2:
-real
-user
-sys
+real 0.02
+user 0.00
+sys 0.00
 
 Trace 3:
-real
-user
-sys
+real 0.19
+user 0.09
+sys 0.01
 
 Trace 4:
-real
-user
-sys
+real 0.38
+user 0.30
+sys 0.01
 
 Trace 5:
-real
-user
-sys
+real 7.54
+user 7.05
+sys 0.01
 
 Buddy System - KMA_BUD:
 
@@ -91,56 +91,30 @@ real 0.83
 user 0.35
 sys 0.02
 
+
 McKusick- Karels - KMA_MCK2:
 
 Trace 1:
-real
-user
-sys
+real 0.03
+user 0.00
+sys 0.00
 
 Trace 2:
-real
-user
-sys
+real 0.04
+user 0.00
+sys 0.01
 
 Trace 3:
-real
-user
-sys
+real 0.09
+user 0.03
+sys 0.00
 
 Trace 4:
-real
-user
-sys
+real 0.13
+user 0.06
+sys 0.01
 
 Trace 5:
-real
-user
-sys
-
-Resource Map - KMA_RM:
-
-Trace 1:
-real
-user
-sys
-
-Trace 2:
-real
-user
-sys
-
-Trace 3:
-real
-user
-sys
-
-Trace 4:
-real
-user
-sys
-
-Trace 5:
-real
-user
-sys
+real 0.77
+user 0.29
+sys 0.01

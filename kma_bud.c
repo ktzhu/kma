@@ -80,6 +80,7 @@ typedef struct {
 
 /************Global Variables*********************************************/
 
+#define G_MAXSIZE 8192 // Assume requests for space < 8000
 mainheader_struct* g_pagemain = 0;
 
 /************Function Prototypes******************************************/
@@ -125,9 +126,7 @@ void* kma_malloc(kma_size_t size) {
   }
 
   /* Requested size too large */
-  if ((size + sizeof(void*)) > PAGESIZE) {
-    return NULL;
-  }
+  if ((size + sizeof(void*)) > PAGESIZE) { return NULL; }
 
   /* get size of the free list */
   int j, res = 0;
@@ -154,9 +153,7 @@ void* kma_malloc(kma_size_t size) {
         }
       }
       // If we find the page or there is no next page, break
-      if (ret_page || ((*temp).page_next==0)) {
-        break;
-      }
+      if (ret_page || ((*temp).page_next==0)) { break; }
       temp = (*temp).page_next;
     }
 
@@ -185,9 +182,7 @@ void* kma_malloc(kma_size_t size) {
       (*ret_page).allocnum=0;
       (*ret_page).page_ptr = page;
       (*ret_page).addr = (void*)(page->ptr);
-      for(i = 0; i < 64; i++) {
-        (*ret_page).bm[i]=0;
-      }
+      for(i = 0; i < 64; i++) { (*ret_page).bm[i]=0; }
       *((buffer_struct**)((*ret_page).addr)) = 0;
       listheader_struct* list = &((*g_pagemain).free_list[9]);
       buffer_struct* buff = (buffer_struct*)((*ret_page).addr);
@@ -205,9 +200,7 @@ void* kma_malloc(kma_size_t size) {
       (*ret_page).allocnum=0;
       (*ret_page).page_ptr = page;
       (*ret_page).addr = (void*)(page->ptr);
-      for(i = 0; i < 64; i++) {
-        (*ret_page).bm[i]=0;
-      }
+      for(i = 0; i < 64; i++) { (*ret_page).bm[i]=0; }
       *((buffer_struct**)((*ret_page).addr)) = 0;
       listheader_struct* list = &((*g_pagemain).free_list[9]);
       buffer_struct* buff = (buffer_struct*)((*ret_page).addr);
@@ -270,9 +263,7 @@ void* kma_malloc(kma_size_t size) {
         }
       }
       // If we find the page, break
-      if (page || ((*temp).page_next == 0)) {
-        break;
-      }
+      if (page || ((*temp).page_next == 0)) { break; }
       temp = (*temp).page_next;
     }
 
@@ -282,9 +273,7 @@ void* kma_malloc(kma_size_t size) {
     end = (size_rounded + os)/16;
     os /= 16;
 
-    for (j = os; j < end; j++) {
-      bm[j/8] |= (1<<(j%8));
-    }
+    for (j = os; j < end; j++) { bm[j/8] |= (1<<(j%8)); }
     /* Fill the bitmap */
 
     (*page).allocnum++;
@@ -320,16 +309,12 @@ void kma_free(void* ptr, kma_size_t size) {
       }
     }
     // If we find the page or there is no next page, break
-    if (((*temp).page_next == 0) || page) {
-      break;
-    }
+    if (((*temp).page_next == 0) || page) { break; }
     prev = temp;
     temp = (*temp).page_next;
   }
   for (i = 0; i < 10; ++i) {
-    if ((*g_pagemain).free_list[i].size == size_rounded) {
-      break;
-    }
+    if ((*g_pagemain).free_list[i].size == size_rounded) { break; }
   }
   list = &((*g_pagemain).free_list[i]);
   /* Insert buffer */
@@ -344,9 +329,7 @@ void kma_free(void* ptr, kma_size_t size) {
   end = (size_rounded + os)/16;
   os /= 16;
 
-  for(j = os; j < end; j++) {
-    bm[j/8] &= (~(1<<(j%8)));
-  }
+  for(j = os; j < end; j++) { bm[j/8] &= (~(1<<(j%8))); }
   /* end empty bitmap */
   (*page).allocnum--;
   (*g_pagemain).allocnum--;
@@ -385,9 +368,7 @@ listheader_struct* coalesce (listheader_struct* list, pageheader_struct* page) {
   buffer_struct* third_temp;
   int end, i, os = (int)((void*)((*list).buffer) - (void*)((*page).addr));
 
-  if(((*list).size) == 8192) {
-    return list;
-  }
+  if(((*list).size) == G_MAXSIZE) { return list; }
 
   if (!(os%(2*size) == 0)) { // Buddy was previous
     second_temp = (buffer_struct*)((void*)((*list).buffer) - size);
@@ -399,9 +380,7 @@ listheader_struct* coalesce (listheader_struct* list, pageheader_struct* page) {
     end /= 16;
 
     for (i = os; i < end; i++) {
-      if((1<<(i%8)) & bm[i/8]) {
-        return list;
-      }
+      if((1<<(i%8)) & bm[i/8]) { return list; }
     }
 
     buffer_struct* ret = 0;
@@ -428,9 +407,7 @@ listheader_struct* coalesce (listheader_struct* list, pageheader_struct* page) {
     end /= 16;
 
     for (i = os; i < end; i++) {
-      if((1<<(i%8)) & bm[i/8]) {
-        return list;
-      }
+      if((1<<(i%8)) & bm[i/8]) { return list; }
     }
 
     buffer_struct* ret_list = 0;
@@ -454,9 +431,7 @@ listheader_struct* coalesce (listheader_struct* list, pageheader_struct* page) {
   (*ret).buffer = second_temp;
   (*second_temp).next_buff = temp_buffer;
 
-  if (size < 8192) {
-    ret = coalesce(ret, page);
-  }
+  if (size < G_MAXSIZE) { ret = coalesce(ret, page); }
 
   return ret;
 } /* coalesce */
@@ -470,9 +445,7 @@ listheader_struct* split (listheader_struct* list, kma_size_t size) {
   buffer_struct* second_temp;
   buffer_struct* third_temp;
 
-  if (size == ((*list).size)) {
-    return list;
-  }
+  if (size == ((*list).size)) { return list; }
 
   buffer_struct* ret_buff = (*list).buffer;
   (*list).buffer=(*ret_buff).next_buff;
@@ -488,9 +461,7 @@ listheader_struct* split (listheader_struct* list, kma_size_t size) {
   (*ret_list).buffer = second_temp;
   (*second_temp).next_buff = tempbuff1;
 
-  if(size < (*ret_list).size) {
-    ret_list = split(ret_list, size);
-  }
+  if(size < (*ret_list).size) { ret_list = split(ret_list, size); }
   return ret_list;
 } /* split */
 

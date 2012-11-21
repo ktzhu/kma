@@ -84,6 +84,7 @@ typedef struct {
 
 /************Global Variables*********************************************/
 
+#define G_MAXSIZE 8192 // Assume requests for space < 8000
 mainheader_struct* g_pagemain=0;
 
 /************Function Prototypes******************************************/
@@ -177,12 +178,10 @@ kma_malloc(kma_size_t size) {
       (*page_ret).page_ptr=page;
       (*page_ret).addr=(void*)(page->ptr);
       (*page_ret).allocnum=0;
-      for(i = 0; i < 64; i++) {
-        (*page_ret).bitmap[i]=0;
-      }
+      for(i = 0; i < 64; i++) { (*page_ret).bitmap[i]=0; }
       buffer_struct* temp_buff;
       temp_buff = (*page_ret).addr;
-      (*temp_buff).size = 8192;
+      (*temp_buff).size = G_MAXSIZE;
       (*temp_buff).islocal = 0;
       /* tmp var for adding buff */
       listheader_struct* tmp_list = &((*g_pagemain).free_list[9]);
@@ -223,7 +222,7 @@ kma_malloc(kma_size_t size) {
       }
       buffer_struct* temp_buff;
       temp_buff = (*page_ret).addr;
-      (*temp_buff).size = 8192;
+      (*temp_buff).size = G_MAXSIZE;
       (*temp_buff).islocal = 0;
       /* tmp var for adding buff */
       listheader_struct* tmp_list = &((*g_pagemain).free_list[9]);
@@ -250,9 +249,7 @@ kma_malloc(kma_size_t size) {
     os /= 16;
     end /= 16;
 
-    for(i = os; i < end; ++i) {
-      bm[i/8] |= (1<<(i%8));
-    }
+    for(i = os; i < end; ++i) { bm[i/8] |= (1<<(i%8)); }
     /* fill bitmap */
 
     if ((*ret).islocal == 1) {
@@ -283,9 +280,7 @@ kma_malloc(kma_size_t size) {
         }
       }
       // If we find the page, break
-      if (((*temp).page_next==0) || page) {
-        break;
-      }
+      if (((*temp).page_next==0) || page) { break; }
       temp = (*temp).page_next;
     }
 
@@ -370,10 +365,8 @@ void kma_free(void* ptr, kma_size_t size) {
     end = os + size_rounded;
     os /= 16;
     end /= 16;
-    for(i = os; i < end; i++) {
-      bitmap[i/8] &= (~(1<<(i%8)));
-    }
-/* end empty bitmap */
+    for(i = os; i < end; i++) { bitmap[i/8] &= (~(1<<(i%8))); }
+    /* end empty bitmap */
     (*g_pagemain).allocnum--;
     (*page).allocnum--;
     (*list).s = 0;
@@ -419,9 +412,7 @@ void kma_free(void* ptr, kma_size_t size) {
     end = os + size_rounded;
     os /= 16;
     end /= 16;
-    for(i = os; i < end; i++) {
-      bitmap[i/8] &= (~(1<<(i%8)));
-    }
+    for(i = os; i < end; i++) { bitmap[i/8] &= (~(1<<(i%8))); }
     /* end empty bitmap */
     (*page).allocnum--;
     (*g_pagemain).allocnum--;
@@ -451,11 +442,9 @@ listheader_struct* coalesce (void* ptr, listheader_struct* list, pageheader_stru
   buffer_struct* temp2;
   buffer_struct* temp3;
 
-  if(8192==((*list).size)) {
-    return list;
-  }
+  if(G_MAXSIZE == ((*list).size)) { return list; }
 
-  if (!(os%(size*2)==0)) { // Buddy was previous
+  if (!(os%(size*2)==0)) { // We know buddy was the previous one
     temp2=(buffer_struct*)(ptr - size);
     temp3=(buffer_struct*)ptr;
 
@@ -470,7 +459,7 @@ listheader_struct* coalesce (void* ptr, listheader_struct* list, pageheader_stru
       }
     }
   }
-  else { // Buddy is next
+  else { // We know buddy is the next one
     temp2=(buffer_struct*)ptr;
     temp3=(buffer_struct*)(ptr + size);
 
@@ -493,9 +482,7 @@ listheader_struct* coalesce (void* ptr, listheader_struct* list, pageheader_stru
 
   (*temp1).size=(*ret).size;
 
-  if(size < 8192) {
-    ret = coalesce(temp1, ret, page);
-  }
+  if(size < G_MAXSIZE) { ret = coalesce(temp1, ret, page); }
 
   return ret;
 } /* coalesce */
